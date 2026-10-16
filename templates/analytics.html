@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOIRÉ — аналитика</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="{{ url_for('static', filename='style.css', v='noire-full-cat-outline-20261014') }}" rel="stylesheet"></head>
+<body><div class="app-shell">{% set page = "analytics" %}{% include "sidebar.html" %}<div class="app-content"><header class="topbar"><div class="topbar-greeting"><span class="greeting-icon">✧</span><div><span class="greeting-title">Добро пожаловать, Шеф!</span><small>Ресторан NOIRÉ · Аналитика</small></div></div><div class="topbar-right"><div class="top-date"><span>▦</span><div><b>{{ end_day }}</b><small>Текущая дата</small></div></div><div class="admin-chip"><span>♙</span> Администратор</div></div></header>
+<main class="container-fluid px-lg-4 py-4"><div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+<div><div class="eyebrow">ОТЧЁТЫ И ПОКАЗАТЕЛИ</div><h1>Аналитика</h1><p class="muted mb-0">Сводка заказов, списаний и текущих складских рисков.</p></div>
+<form method="get" class="period-filter"><label for="period">Период отчёта</label><select class="form-select" id="period" name="period" onchange="this.form.submit()"><option value="7" {% if period == '7' %}selected{% endif %}>Последние 7 дней</option><option value="30" {% if period == '30' %}selected{% endif %}>Последние 30 дней</option><option value="90" {% if period == '90' %}selected{% endif %}>Последние 90 дней</option></select><span class="muted small">{{ start_day }} — {{ end_day }}</span></form></div>
+<section class="row g-3 mb-4">
+{% for label,value,note,icon in [('Оформленные заказы',summary.orders_count,'за выбранный период','↗'),('Продано порций',summary.portions,'по оформленным заказам','≋'),('Выручка по меню',('{:,.0f}'.format(summary.revenue).replace(',',' ') ~ ' ₽'),'по текущим ценам','₽'),('Списания',writeoff_summary.events,( '%.1f'|format(writeoff_summary.quantity)) ~ ' ед. списано','−')] %}
+<div class="col-6 col-xl-3"><div class="metric-card analytics-kpi"><div class="metric-label">{{ label }}</div><div class="metric-value">{{ value }}</div><div class="metric-note">{{ note }}</div><div class="metric-icon">{{ icon }}</div></div></div>
+{% endfor %}</section>
+<section class="row g-4 mb-4"><div class="col-xl-8"><div class="panel h-100"><div class="panel-heading"><div><h2>Динамика заказов и порций</h2><p>Дни без заказов показаны нулевыми значениями.</p></div></div><div class="chart-wrap"><canvas id="ordersChart"></canvas></div></div></div>
+<div class="col-xl-4"><div class="panel h-100"><div class="panel-heading"><div><h2>Контроль сроков</h2><p>Активные партии с остатком.</p></div></div><div class="expiry-summary">
+<div class="expiry-row"><span class="expiry-dot dot-red"></span><span>Просроченные</span><strong>{{ expiry_counts.expired or 0 }}</strong></div>
+<div class="expiry-row"><span class="expiry-dot dot-gold"></span><span>Истекают за 3 дня</span><strong>{{ expiry_counts.next3 or 0 }}</strong></div>
+<div class="expiry-row"><span class="expiry-dot dot-blue"></span><span>Истекают за 4–7 дней</span><strong>{{ expiry_counts.next7 or 0 }}</strong></div></div><a href="/stock" class="btn btn-outline-dark w-100 mt-4">Открыть мониторинг сроков →</a></div></div></section>
+<section class="row g-4 mb-4"><div class="col-xl-7"><div class="panel h-100"><div class="panel-heading"><div><h2>Популярные блюда</h2><p>Рейтинг по количеству проданных порций.</p></div></div><div class="chart-wrap chart-short"><canvas id="dishesChart"></canvas></div></div></div>
+<div class="col-xl-5"><div class="panel h-100"><div class="panel-heading"><div><h2>Нужно пополнить</h2><p>Остатки ниже порогового уровня.</p></div><span class="status status-orange">{{ low_stock_rows|length }} позиций</span></div><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Продукт</th><th>Остаток</th><th>Порог</th><th>Дефицит</th></tr></thead><tbody>
+{% for p in low_stock_rows[:8] %}<tr><td class="fw-semibold">{{ p.name }}</td><td>{{ '%.1f'|format(p.stock) }} {{ p.unit }}</td><td>{{ '%.1f'|format(p.threshold) }}</td><td class="text-danger fw-semibold">{{ '%.1f'|format(p.shortage) }}</td></tr>{% else %}<tr><td colspan="4" class="muted text-center py-4">Все остатки выше порогов</td></tr>{% endfor %}
+</tbody></table></div></div></div></section>
+<section class="row g-4 mb-4"><div class="col-xl-6"><div class="panel h-100"><div class="panel-heading"><div><h2>Списания по продуктам</h2><p>Количество за выбранный период.</p></div></div><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Продукт</th><th>Количество</th><th>Ед. изм.</th><th>Операций</th></tr></thead><tbody>
+{% for x in writeoff_rows %}<tr><td class="fw-semibold">{{ x.name }}</td><td>{{ '%.1f'|format(x.quantity) }}</td><td>{{ x.unit }}</td><td>{{ x.events }}</td></tr>{% else %}<tr><td colspan="4" class="muted text-center py-4">За период списаний нет</td></tr>{% endfor %}
+</tbody></table></div></div></div><div class="col-xl-6"><div class="panel h-100"><div class="panel-heading"><div><h2>Продажи по блюдам</h2><p>Порции и выручка по текущей цене.</p></div></div><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Блюдо</th><th>Порции</th><th>Выручка</th></tr></thead><tbody>
+{% for x in top_dishes %}<tr><td class="fw-semibold">{{ x.name }}</td><td>{{ x.portions }}</td><td>{{ '{:,.0f}'.format(x.revenue or 0).replace(',', ' ') }} ₽</td></tr>{% else %}<tr><td colspan="3" class="muted text-center py-4">За период заказов нет</td></tr>{% endfor %}
+</tbody></table></div><p class="muted small mt-3 mb-0">Выручка ориентировочная: используется текущая цена блюда. Исторические цены и себестоимость не сохраняются.</p></div></div></section>
+<footer class="footer d-flex justify-content-between"><span>NOIRÉ · АНАЛИТИКА ОПЕРАЦИЙ</span><a class="footer-link" href="/">← Вернуться к складу</a></footer></main></div></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script><script>
+const d={{ daily_chart|tojson }}, gold='#b18a4a', ink='#343b47', grid='#eee7dc';
+Chart.defaults.font.family="'DM Sans',Arial,sans-serif";Chart.defaults.font.size=13;Chart.defaults.color='#b8ad9b';Chart.defaults.plugins.legend.labels.usePointStyle=true;Chart.defaults.plugins.legend.labels.padding=20;
+const orderCanvas=document.getElementById('ordersChart'),ctx=orderCanvas.getContext('2d'),area=ctx.createLinearGradient(0,0,0,320);area.addColorStop(0,'rgba(201,164,93,.30)');area.addColorStop(1,'rgba(201,164,93,.015)');
+new Chart(orderCanvas,{type:'line',data:{labels:d.map(x=>x.day),datasets:[{label:'Заказы',data:d.map(x=>x.orders),borderColor:'#d7b66f',backgroundColor:area,fill:true,tension:.38,borderWidth:3,pointRadius:3,pointHoverRadius:7,pointBackgroundColor:'#e6c77e',pointBorderColor:'#171613',pointBorderWidth:2},{label:'Порции',data:d.map(x=>x.portions),borderColor:'#eee4d0',backgroundColor:'rgba(238,228,208,.08)',fill:false,tension:.38,borderWidth:2.5,pointRadius:2.5,pointHoverRadius:6,pointBackgroundColor:'#eee4d0',pointBorderColor:'#171613',pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},tooltip:{backgroundColor:'#211e18',titleColor:'#f3dfb5',bodyColor:'#eee5d4',borderColor:'#c9a45d66',borderWidth:1,padding:12,displayColors:true}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,maxRotation:0,color:'#b8ad9b'},border:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(201,164,93,.12)'},ticks:{precision:0,color:'#b8ad9b'},border:{display:false}}}}});
+const dishes={{ top_dishes|tojson }};new Chart(document.getElementById('dishesChart'),{type:'bar',data:{labels:dishes.map(x=>x.name),datasets:[{label:'Продано порций',data:dishes.map(x=>x.portions),backgroundColor:dishes.map((_,i)=>i===0?'#d7b66f':'rgba(201,164,93,.48)'),borderRadius:7,maxBarThickness:30}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#211e18',titleColor:'#f3dfb5',bodyColor:'#eee5d4',borderColor:'#c9a45d66',borderWidth:1,padding:11}},scales:{x:{beginAtZero:true,grid:{color:'rgba(201,164,93,.12)'},ticks:{precision:0,color:'#b8ad9b'},border:{display:false}},y:{grid:{display:false},ticks:{color:'#c9bda9'},border:{display:false}}}}});
+</script><script>
+(() => {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const targets = document.querySelectorAll('.metric-card, main .panel, main section.panel');
+  targets.forEach((el, i) => {
+    el.classList.add('reveal-on-scroll');
+    if (el.classList.contains('metric-card')) el.style.setProperty('--reveal-delay', `${(i % 5) * 75}ms`);
+  });
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    targets.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
+  document.body.classList.add('motion-ready');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+  targets.forEach(el => observer.observe(el));
+})();
+</script>
+</body></html>

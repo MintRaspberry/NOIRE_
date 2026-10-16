@@ -1,0 +1,15 @@
+<aside class="sidebar">
+  <a class="sidebar-brand" href="{{ url_for('dashboard') }}"><span class="brand-mark brand-cat-mark"><span class="brand-monogram">N</span><span class="brand-spark">✦</span></span><span><b>NOIRÉ</b><small>MAISON · RESTAURANT</small></span></a>
+  <div class="sidebar-caption"><span class="paw-print" aria-hidden="true">🐾</span> РАБОЧЕЕ ПРОСТРАНСТВО</div>
+  <nav class="side-nav" aria-label="Главная навигация">
+    <a class="side-link {{ 'active' if page == 'home' else '' }}" href="{{ url_for('dashboard') }}"><span class="nav-icon">⌂</span>Главная <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'deliveries' else '' }}" href="{{ url_for('deliveries_page') }}"><span class="nav-icon">♧</span>Поставки <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'orders' else '' }}" href="{{ url_for('orders_page') }}"><span class="nav-icon">♜</span>Заказы <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'stock' else '' }}" href="{{ url_for('stock_page') }}"><span class="nav-icon">▤</span>Склад <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'warehouse_dashboard' else '' }}" href="{{ url_for('warehouse_dashboard') }}"><span class="nav-icon">▥</span>Дашборд склада <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'menu' else '' }}" href="{{ url_for('menu_page') }}"><span class="nav-icon">✧</span>Меню <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'analytics' else '' }}" href="{{ url_for('analytics') }}"><span class="nav-icon">▥</span>Аналитика <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link {{ 'active' if page == 'forecasts' else '' }}" href="{{ url_for('forecasts_page') }}"><span class="nav-icon">⌁</span>Прогнозы <span class="nav-paw" aria-hidden="true">🐾</span></a>
+  </nav>
+  <div class="sidebar-bottom"><span class="live-mini"><i></i> Система активна</span><div class="sidebar-corner-paw" aria-hidden="true">🐾</div></div>
+</aside>
