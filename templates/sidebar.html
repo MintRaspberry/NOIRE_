@@ -10,6 +10,7 @@
     <a class="side-link {{ 'active' if page == 'menu' else '' }}" href="{{ url_for('menu_page') }}"><span class="nav-icon">✧</span>Меню <span class="nav-paw" aria-hidden="true">🐾</span></a>
     <a class="side-link {{ 'active' if page == 'analytics' else '' }}" href="{{ url_for('analytics') }}"><span class="nav-icon">▥</span>Аналитика <span class="nav-paw" aria-hidden="true">🐾</span></a>
     <a class="side-link {{ 'active' if page == 'forecasts' else '' }}" href="{{ url_for('forecasts_page') }}"><span class="nav-icon">⌁</span>Прогнозы <span class="nav-paw" aria-hidden="true">🐾</span></a>
+    <a class="side-link" href="{{ url_for('waiter_page') }}" target="_blank" rel="noopener"><span class="nav-icon">♨</span>Официант <span class="nav-paw" aria-hidden="true">🐾</span></a>
   </nav>
   <div class="sidebar-bottom"><span class="live-mini"><i></i> Система активна</span><div class="sidebar-corner-paw" aria-hidden="true">🐾</div></div>
 </aside>

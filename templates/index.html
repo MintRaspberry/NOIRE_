@@ -22,12 +22,74 @@
         <div class="col-6 col-xl"><a class="metric-card metric-link" href="{{ url_for('stock_page') }}"><div class="metric-label">Просрочено</div><div class="metric-value {{ 'text-danger' if metrics.expired else '' }}">{{ metrics.expired }}</div><div class="metric-note">партий с остатком</div><div class="metric-icon">!</div></a></div>
         <div class="col-6 col-xl"><a class="metric-card metric-link" href="{{ url_for('menu_page') }}"><div class="metric-label">Стоп-лист</div><div class="metric-value">{{ metrics.stop_list }}</div><div class="metric-note">блюд недоступно</div><div class="metric-icon">⊘</div></a></div>
       </section>
+
+      <section class="row g-4 mb-4">
+        <div class="col-xl-6">
+          <div class="panel h-100">
+            <div class="panel-heading">
+              <div><h2>Что именно протухает</h2><p>Партии со сроком годности 3 дня и меньше.</p></div>
+              <span class="panel-symbol">◷</span>
+            </div>
+            {% if expiring_list %}
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead><tr><th>Продукт</th><th>Остаток</th><th>Годен до</th><th>Осталось</th></tr></thead>
+                  <tbody>
+                    {% for x in expiring_list %}
+                    <tr>
+                      <td class="fw-semibold">{{ x.product }}</td>
+                      <td>{{ '%.1f'|format(x.remaining) }} {{ x.unit }}</td>
+                      <td>{{ x.earliest }}</td>
+                      <td>
+                        {% if x.days_left == 0 %}<span class="status status-orange">сегодня</span>
+                        {% else %}<span class="status status-orange">{{ x.days_left }} дн.</span>{% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="muted mb-0">Партий с близким сроком нет.</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <div class="panel h-100">
+            <div class="panel-heading">
+              <div><h2>Просроченные партии</h2><p>Остаток будет списан автоматически.</p></div>
+              <span class="panel-symbol">!</span>
+            </div>
+            {% if expired_list %}
+              <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                  <thead><tr><th>Продукт</th><th>Остаток</th><th>Истёк</th><th>Просрочка</th></tr></thead>
+                  <tbody>
+                    {% for b in expired_list %}
+                    <tr>
+                      <td class="fw-semibold">{{ b.product_name }}</td>
+                      <td>{{ '%.1f'|format(b.remaining) }} {{ b.unit }}</td>
+                      <td>{{ b.expires_on }}</td>
+                      <td><span class="status status-red">{{ -b.days_left }} дн.</span></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="muted mb-0">Просроченных партий нет.</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
       <section class="home-lower row g-4">
         <div class="col-xl-7"><div class="panel home-panel h-100"><div class="panel-heading"><div><h2>Быстрый доступ</h2><p>Самые нужные действия без лишних экранов</p></div><span class="panel-symbol">✧</span></div><div class="quick-actions">
           <a href="{{ url_for('deliveries_page') }}" class="quick-action"><span class="quick-action-icon">＋</span><span><b>Принять поставку</b><small>Добавить продукты и сроки годности</small></span></a>
           <a href="{{ url_for('orders_page') }}" class="quick-action"><span class="quick-action-icon">♜</span><span><b>Оформить заказ</b><small>Проверить рецепт и списать ингредиенты</small></span></a>
           <a href="{{ url_for('menu_page') }}" class="quick-action"><span class="quick-action-icon">✧</span><span><b>Посмотреть меню</b><small>Доступность блюд и стоп-лист</small></span></a>
           <a href="{{ url_for('analytics') }}" class="quick-action"><span class="quick-action-icon">▥</span><span><b>Открыть аналитику</b><small>Продажи, списания и остатки</small></span></a>
+          <a href="{{ url_for('waiter_page') }}" target="_blank" rel="noopener" class="quick-action"><span class="quick-action-icon">♨</span><span><b>Режим официанта</b><small>Отдельная страница для планшета</small></span></a>
         </div></div></div>
         <div class="col-xl-5"><div class="panel home-panel h-100 expiry-panel"><div class="panel-heading"><div><h2>Сроки под контролем</h2><p>NOIRÉ автоматически списывает просроченные остатки</p></div><span class="panel-symbol">◷</span></div><div class="expiry-status"><div class="expiry-status-mark">✓</div><div><b>Автоматическое списание включено</b><p>При каждом обращении к сайту система проверяет сроки, записывает списание в журнал и обнуляет остаток просроченной партии. Повторного списания не будет.</p></div></div><a class="text-link" href="{{ url_for('stock_page') }}">Посмотреть партии и сроки <span>→</span></a><div class="decorative-cat-small"><img src="{{ url_for('static', filename='cat-outline-gold.png') }}" alt=""></div></div></div>
       </section>
